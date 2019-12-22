@@ -32,7 +32,6 @@ public class LeafTest {
         }catch(Exception e){
             fail("no memory was alocated for the test");
         }
-
     }
 
 //    @After
