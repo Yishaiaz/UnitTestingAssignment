@@ -1,11 +1,8 @@
 package system;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.ArrayList;
-
+import java.nio.file.DirectoryNotEmptyException;
 import static org.junit.Assert.*;
 
 public class FileSystemTest {
@@ -163,7 +160,7 @@ public class FileSystemTest {
     }
 
     /**
-     * testing the file() function with inserting two same name files with different sizes.
+     * testing the file() method with inserting two same name files with different sizes.
      * covering the case where removing the old copy will make room for the new one.
      * notice this fails because there is a bug in the code (filesystem line 121 (should be + and not - ).
      */
@@ -185,7 +182,7 @@ public class FileSystemTest {
     }
 
     /**
-     * testing the file() function with inserting a file with the same name as a folder
+     * testing the file() method with inserting a file with the same name as a folder
      */
     @Test (expected = BadFileNameException.class)
     public void badFileCreationFileWithSameNameAsFolder() throws Exception{
@@ -196,24 +193,311 @@ public class FileSystemTest {
         fileSystemFilled.file(pathWithFile,2);
     }
 
+    /**
+     * testing the file() method with passing a negative 'k' parameter
+     * Will fail, as it will throw an exception (NegativeInteger) the method hasn't declared it might
+     */
+    @Test
+    public void badFileCreationFileWithNegativeK(){
+        try{
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            String[] pathWithFile = {"root", "TestName"};
+            fileSystemFilled.dir(pathWithFile);
+            fileSystemFilled.file(pathWithFile,-2);
+        }catch(Exception e){
+            fail("should not throw exception, name and space is valid");
+        }
+    }
+
+    /**
+     * testing the file() method with passing a null 'name' array parameter
+     * Will fail, as it will throw an exception (NullPointer) the method hasn't declared it might
+     */
+    @Test
+    public void badFileCreationFileWithNullArray(){
+        try{
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            fileSystemFilled.file(null,2);
+        }catch(Exception e){
+            fail("should not throw exception, name and space is valid");
+        }
+    }
+
+    /**
+     * testing the method lsdir()
+     * checking a valid example
+     */
     @Test
     public void lsdir() {
-
+        String[] pathToCheck = {"root", "firstFolder"};
+        String[] names = this.fileSystemFilled.lsdir(pathToCheck);
+        String[] actual = {"tamir"};
+        for (int i = 0; i < names.length; i++) {
+            assertEquals(actual[i], names[i]);
+        }
     }
 
+
+    /**
+     * testing the method lsdir()
+     * checking with a non existing folder name
+     */
+    @Test
+    public void lsdirNotExistingFolder() {
+        String[] pathToCheck = {"root", "NotThere"};
+        String[] names = this.fileSystemFilled.lsdir(pathToCheck);
+        assertNull(names);
+    }
+
+    /**
+     * testing the method lsdir()
+     * checking with a filename as folder name parameter
+     */
+    @Test
+    public void lsdirFileNameInsteadFolder() {
+        String[] pathToCheck = {"root", "firstFolder", "tamir"};
+        String[] names = this.fileSystemFilled.lsdir(pathToCheck);
+        assertNull(names);
+    }
+    /**
+     * testing the method lsdir()
+     * checking with a null as path
+     * will fail as it throws NullPointerException the method didn't declare it might
+     */
+    @Test
+    public void lsdirWithNullPath() {
+        String[] pathToCheck = null;
+        String[] names = this.fileSystemFilled.lsdir(pathToCheck);
+        assertNull(names);
+    }
+
+    /**
+     * testing the method rmfile()
+     * removing a valid example
+     */
     @Test
     public void rmfile() {
+        String[] pathToTamir = {"root", "firstFolder", "tamir"};
+        this.fileSystemFilled.rmfile(pathToTamir);
+        assertNull(this.fileSystemFilled.FileExists(pathToTamir));
+    }
+    /**
+     * testing the method rmfile()
+     * removing a invalid example - non existing file
+     */
+    @Test
+    public void rmfileNotExistingFile() {
+        String[] pathToTamir = {"root", "firstFolder", "loTamir"};
+        this.fileSystemFilled.rmfile(pathToTamir);
+        this.fileSystemFilled.FileExists(pathToTamir);
     }
 
+    /**
+     * testing the method rmfile()
+     * removing a invalid example - path = null
+     * will fail, due to NullPointerException the method didn't declare it might throw
+     */
+    @Test
+    public void rmfileNullPath() {
+        String[] pathToTamir = null;
+        this.fileSystemFilled.rmfile(pathToTamir);
+        this.fileSystemFilled.FileExists(pathToTamir);
+    }
+    /**
+     * testing the method rmdir()
+     * removing a valid example
+     */
     @Test
     public void rmdir() {
+        try{
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            fileSystemFilled.rmdir(this.path);
+        }catch(Exception e){
+            fail("valid case, should not throw exceptions=>"+e.getClass());
+        }
     }
 
+    /**
+     * testing the method rmdir()
+     * removing a invalid example - not existing folder
+     */
+    @Test
+    public void rmdirNotExistingFolder() {
+        try{
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            String[] path = {"root","NotReallyHere"};
+            fileSystemFilled.rmdir(path);
+        }catch(Exception e){
+            fail("valid case, should not throw exceptions=>"+e.getClass());
+        }
+    }
+
+    /**
+     * testing the method rmdir()
+     * removing a invalid example - not empty folder
+     */
+    @Test (expected = DirectoryNotEmptyException.class)
+    public void rmdirNotEmptyFolder() throws Exception{
+        FileSystem fileSystemFilled = new FileSystem(10);
+        fileSystemFilled.dir(this.path);
+        String[] path = {"root","firstFolder", "tamir"};
+        fileSystemFilled.file(path, 2);
+        fileSystemFilled.rmdir(this.path);
+    }
+    /**
+     * testing the method rmdir()
+     * removing a invalid example - path=null
+     * will fail, due to NullPointerException the method didn't declare it might throw
+     */
+    @Test
+    public void rmdirPathNull() {
+        try{
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            String[] path = null;
+            fileSystemFilled.rmdir(path);
+        }catch(Exception e){
+            fail("shouldn't throw an exception=>"+e.getClass());
+        }
+    }
+
+    /**
+     * testing the method FileExist()
+     * valid example
+     */
     @Test
     public void fileExists() {
+        try{
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            String[] path = {"root","firstFolder", "tamir"};
+            fileSystemFilled.file(path, 2);
+            fileSystemFilled.FileExists(path);
+        }catch(Exception e){
+            fail("shouldn't throw an exception=>"+e.getClass());
+        }
+    }
+    /**
+     * testing the method FileExist()
+     * invalid example - not existing file
+     */
+    @Test
+    public void fileExistsNotExists() {
+        try{
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            String[] path = {"root","firstFolder", "tamir"};
+            fileSystemFilled.file(path, 2);
+            String[] notRealPath = {"root","firstFolder", "NotTamir"};
+            assertNull(fileSystemFilled.FileExists(notRealPath));
+        }catch(Exception e){
+            fail("shouldn't throw an exception=>"+e.getClass());
+        }
+    }
+    /**
+     * testing the method FileExist()
+     * invalid example - a path to a directory instead of a file
+     * will fail, due to ClassCastException the method didn't declare it might throw
+     */
+    @Test
+    public void fileExistsPathToFolder() {
+        try{
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            String[] path = {"root","firstFolder", "tamir"};
+            fileSystemFilled.file(path, 2);
+            String[] pathToFolder = {"root","firstFolder"};
+            assertNull(fileSystemFilled.FileExists(pathToFolder));
+        }catch(Exception e){
+            fail("shouldn't throw an exception=>"+e.getClass());
+        }
     }
 
+    /**
+     * testing the method FileExist()
+     * invalid example - path = null
+     * will fail, due to NullPointerException the method didn't declare it might throw
+     */
+    @Test
+    public void fileExistsPathNull() {
+        try{
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            String[] path = {"root","firstFolder", "tamir"};
+            fileSystemFilled.file(path, 2);
+            String[] notRealPath = null;
+            assertNull(fileSystemFilled.FileExists(notRealPath));
+        }catch(Exception e){
+            fail("shouldn't throw an exception=>"+e.getClass());
+        }
+    }
+
+    /**
+     * testing the method DirExist()
+     * with a valid example
+     */
     @Test
     public void dirExists() {
+        try {
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            fileSystemFilled.DirExists(this.path);
+        }catch (Exception e){
+            fail("shouldn't throw an exception=>"+e.getClass());
+        }
+    }
+
+    /**
+     * testing the method DirExist()
+     * with a invalid example - a none existing folder
+     */
+    @Test
+    public void dirExistsNotExistingFolder() {
+        try {
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            String[] notRealPath = {"root","LoBe'emet"};
+            assertNull(fileSystemFilled.DirExists(notRealPath));
+        }catch (Exception e){
+            fail("shouldn't throw an exception=>"+e.getClass());
+        }
+    }
+
+    /**
+     * testing the method DirExist()
+     * with a invalid example - a path ending with a file
+     */
+    @Test
+    public void dirExistsPathEndingWithFile() {
+        try {
+
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            String[] path = {"root","firstFolder", "tamir"};
+            fileSystemFilled.file(path, 2);
+            assertNull(fileSystemFilled.DirExists(path));
+        }catch (Exception e){
+            fail("shouldn't throw an exception=>"+e.getClass());
+        }
+    }
+
+    /**
+     * testing the method DirExist()
+     * with a invalid example - path=null
+     * will fail, due to NullPointerException the method didn't declare it might throw
+     */
+    @Test
+    public void dirExistsPathNull() {
+        try {
+            FileSystem fileSystemFilled = new FileSystem(10);
+            fileSystemFilled.dir(this.path);
+            assertNull(fileSystemFilled.DirExists(null));
+        }catch (Exception e){
+            fail("shouldn't throw an exception=>"+e.getClass());
+        }
     }
 }

@@ -107,7 +107,10 @@ public class SpaceTest {
     public void deallocExistingFile() {
         Space space = new Space(10);
         try{
+            Tree fakeTree = new Tree("fakeTree");
             Leaf testLeaf = new Leaf("testLeaf", 2);
+            testLeaf.parent = fakeTree;
+            fakeTree.children.put("testLeaf", testLeaf);
             space.Alloc(testLeaf.size, testLeaf);
             int currentSpace = space.countFreeSpace();
             space.Dealloc(testLeaf);
