@@ -15,6 +15,10 @@ public class SpaceStub extends Space {
         }
     }
 
+    /**
+     * for inner test usage if necessary
+     * @param size
+     */
     public void changeSize(int size){
         this.size = size;
     }
